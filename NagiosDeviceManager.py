@@ -75,8 +75,8 @@ while (True):
 									'register 1',
 									'}'
 								]
-								
-								new_config = open(filename, '+')
+
+								new_config = open(filename, 'w')
 								with new_config as f:
 									for line in default_config:
 										f.write(line)
