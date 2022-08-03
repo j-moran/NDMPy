@@ -81,58 +81,6 @@ def check_selection(option,menu_items,dict):
 
 
 #Config Management
-def build_config(option,type,hostname,host_address):
-	match option:
-		# New Config from base configuration
-		case 1:
-			try:
-				run_remote_command(f"cp {type['path']}/{type['basetype']}-base {type['path']}/{hostname}.cfg")
-				run_remote_command(f"sed -i -e 's/\<base\>/{hostname}/g' {type['path']}/{hostname}.cfg")
-				run_remote_command(f"sed -i -e 's/0.0.0.0/{host_address}/g' {type['path']}/{hostname}.cfg")
-
-				print(
-					'------------------------------------------------------\n'
-					f"New configuration made with name {hostname}.cfg in {type['path']}. Please make any additional changes inside the file.\n"
-					'------------------------------------------------------\n'
-				)
-			except:
-				print("An error has occurred and a new configuration could not be saved.")
-
-		# New custom config from available options
-		case 2:
-			#try:
-				filename = f'{hostname}.cfg'
-				service_menu = menus.build_service_menu(type['basetype'], type['OStype'])
-				choice = int(input('Please enter your choice: '))
-
-				#print(service_menu)
-
-				if(choice <= len(service_menu)):
-					for i,opt in enumerate(service_menu):
-						if(i + 1 == choice):
-							choice = service_menu[opt]
-
-					
-				elif(choice == len(service_menu) + 1):
-					clear_screen()
-					return 0
-				else:
-					print('Please choose an option from the menu.')
-
-				#print(
-				#	'------------------------------------------------------\n'
-				#	f"New configuration made with name {hostname}.cfg in {type['path']}. Please make any additional changes inside the file.\n"
-				#	'------------------------------------------------------\n'
-				#)
-			#except:
-				#print("An error has occurred and a new configuration could not be saved.")				
-		case 3:
-			return 0
-
-		case _:
-			print('Please choose an option from the menu.')
-
-	restart_nagios()
 
 def delete_config(location, config_to_delete):
 	run_remote_command(f"rm {location}/{config_to_delete}")

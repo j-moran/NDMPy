@@ -41,7 +41,74 @@ while (True):
 					option = int(input('Please enter your choice: '))
 					
 					# Builds the configuration based on your previous choice. If a la carte option is picked a secondary menu will be generated
-					func.build_config(option,device_to_create,hostname,host_address)
+					#func.build_config(option,device_to_create,hostname,host_address)
+
+					match option:
+						# New Config from base configuration
+						case 1:
+							try:
+								func.run_remote_command(f"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
+								func.run_remote_command(f"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
+								func.run_remote_command(f"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
+
+								print(
+									'------------------------------------------------------\n'
+									f"New configuration made with name {hostname}.cfg in {device_to_create['path']}. Please make any additional changes inside the file.\n"
+									'------------------------------------------------------\n'
+								)
+							except:
+								print("An error has occurred and a new configuration could not be saved.")
+
+						# New custom config from available options
+						case 2:
+							#try:
+								filename = f'{hostname}.cfg'
+								service_menu = menus.build_service_menu(device_to_create['basetype'], device_to_create['OStype'])
+								choice = int(input('Please enter your choice: '))
+
+								# Initialize new configuration file locally
+								default_config = [
+									'define host {',
+									f'host_name {hostname}',
+									f'address {host_address}',
+									f'use base_{device_to_create["OStype"]}_{device_to_create["platform"]}',
+									'register 1',
+									'}'
+								]
+								
+								new_config = open(filename, '+')
+								with new_config as f:
+									for line in default_config:
+										f.write(line)
+										f.write('\n')
+								new_config.close()
+
+								if(choice <= len(service_menu)):
+									for i,opt in enumerate(service_menu):
+										if(i + 1 == choice):
+											choice = service_menu[opt]
+
+									
+								elif(choice == len(service_menu) + 1):
+									func.clear_screen()
+									break
+								else:
+									print('Please choose an option from the menu.')
+
+								#print(
+								#	'------------------------------------------------------\n'
+								#	f"New configuration made with name {hostname}.cfg in {type['path']}. Please make any additional changes inside the file.\n"
+								#	'------------------------------------------------------\n'
+								#)
+							#except:
+								#print("An error has occurred and a new configuration could not be saved.")				
+						case 3:
+							break
+
+						case _:
+							print('Please choose an option from the menu.')
+
+					func.restart_nagios()
 					break
 				elif(device_to_create == 0):
 					func.clear_screen()
