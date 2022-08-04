@@ -4,7 +4,6 @@ import func, menus, config
 from getpass import getpass
 
 func.catch_c()
-script_dir = os.path.dirname(__file__)
 
 # Main loop - Main Menu
 while (True):
@@ -63,8 +62,6 @@ while (True):
 						case 2:
 							#try:
 								filename = f'{hostname}.cfg'
-								service_menu = menus.build_service_menu(device_to_create['basetype'], device_to_create['OStype'])
-								choice = int(input('Please enter your choice: '))
 
 								# Initialize new configuration file locally
 								default_config = [
@@ -76,30 +73,59 @@ while (True):
 									'}'
 								]
 
-								new_config = open(filename, 'w')
-								with new_config as f:
-									for line in default_config:
-										f.write(line)
-										f.write('\n')
-								new_config.close()
-
-								if(choice <= len(service_menu)):
-									for i,opt in enumerate(service_menu):
-										if(i + 1 == choice):
-											choice = service_menu[opt]
-
+								func.write_config(filename,default_config)
+								func.clear_screen()
+								while True:
+									service_menu = menus.build_service_menu(device_to_create['basetype'], device_to_create['OStype'])
+									choice = int(input('Please enter your choice: '))
 									
-								elif(choice == len(service_menu) + 1):
-									func.clear_screen()
-									break
-								else:
-									print('Please choose an option from the menu.')
+									if(choice <= len(service_menu)):
+										for i,opt in enumerate(service_menu):
+											if(i + 1 == choice):
+												choice = service_menu[opt]
 
-								#print(
-								#	'------------------------------------------------------\n'
-								#	f"New configuration made with name {hostname}.cfg in {type['path']}. Please make any additional changes inside the file.\n"
-								#	'------------------------------------------------------\n'
-								#)
+										skeleton = [
+											'define service {',
+											f'host_name {hostname}',
+											f'use {choice}',
+											'register 1',
+											'}'
+										]
+
+										func.write_config(filename,skeleton)
+										func.clear_screen()
+
+										print(
+											'------------------------------------------------------\n'
+											f'{func.key_value(choice, service_menu)} added to configuration.\n'
+											'------------------------------------------------------\n'
+										)
+									elif(choice == len(service_menu) + 1):
+										send = input("Are you ready to send config to server? (y/n)\n"
+											"NOTE: If you choose not to send to the server, the configuration will be discarded.\n")
+										
+										match send:
+											case 'y' | 'Y':
+												if(os.path.exists(filename)):
+													func.send_file_to_server(os.path.abspath(filename),device_to_create['path'] + f'/{filename}')
+													os.remove(filename)
+													func.clear_screen()
+													
+													print(
+														'------------------------------------------------------\n'
+														f"New configuration made with name {filename} in {device_to_create['path']}. Please make any additional changes inside the file.\n"
+														'------------------------------------------------------\n'
+													)
+													break
+											case 'n' | 'N':
+												if(os.path.exists(filename)):
+													os.remove(filename)
+												func.clear_screen()
+												break
+									else:
+										print('Please choose an option from the menu.')
+
+								
 							#except:
 								#print("An error has occurred and a new configuration could not be saved.")				
 						case 3:
@@ -117,8 +143,6 @@ while (True):
 					print('Please choose an option from the menu.')
 
 		case 3:
-			print(script_dir)
-			func.send_file_to_server(script_dir + '\config.py','/home/nagiosmanager/config.py')
 			while (True):
 				items = menus.type_menu(config.device_types) 							# Get the menu options from the generated menu
 				option = int(input('Please enter your choice: ')) 	# Receive input about which device type to choose

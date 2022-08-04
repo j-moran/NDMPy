@@ -89,6 +89,12 @@ def delete_config(location, config_to_delete):
 def view_configs():
 	pass
 
+def write_config(filename, lines):
+	with open(filename, 'a+') as f:
+		for line in lines:
+			f.write(line)
+			f.write('\n')
+
 #General Functions
 
 def merge(*dicts):
@@ -96,3 +102,8 @@ def merge(*dicts):
 	for dict in dicts:
 		res = res | dict
 	return res
+
+def key_value(val, dict):
+	for key, value in dict.items():
+		if val == value:
+			return key
