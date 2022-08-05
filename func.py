@@ -45,6 +45,24 @@ def send_file_to_server(localfile,remotefile):
 		if conn:
 			conn.close()
 
+def get_file_from_server(remotefile,localfile):
+	host = config.server_host
+
+	try:
+		conn = paramiko.SSHClient()
+		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+		conn.connect(host, username=config.username, password=config.password)
+
+		ftp_client=conn.open_sftp()
+		ftp_client.get(remotefile,localfile)
+		ftp_client.close()
+
+	#except:
+	#	print("An error occurred while running command.")
+	finally:
+		if conn:
+			conn.close()
+
 def clear_screen():
 	if os.name == "posix":
 		os.system("clear")

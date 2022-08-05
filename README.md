@@ -2,4 +2,8 @@
 Nagios Device Manager
 
 ## Prerequisites
-- Paramiko (At least version 2.11.0)
+- Python 3.10+
+- Paramiko (At least version 2.11.0 - installed via pip)
+
+## Getting Started
+

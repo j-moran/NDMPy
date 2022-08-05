@@ -36,11 +36,17 @@ def type_menu(dict,mod = False):
 	generate_menu(menu_options)
 	return menu_options
 
-def build_service_menu(service, OS):
+def build_service_menu(service, OS, *configfile):
 	service = service + '_services'
 	OS = OS + '_services'
 
 	combined_list = func.merge(services.service_types[service], services.service_types[OS], services.service_types['general_services'])
+
+	if(configfile):
+		for file in configfile:
+			for item in file:
+				del combined_list[func.key_value(item, combined_list)]
+
 	type_menu(combined_list)
 
 	return combined_list
@@ -71,7 +77,7 @@ def network_menu():
 
 	generate_menu(menu_options)
 
-def del_menu(loc):
+def config_list(loc):
 	configs_from_loc = func.run_remote_command(f"ls {loc} | egrep '\.cfg$'")
 	menu_options = {}
 
@@ -81,3 +87,12 @@ def del_menu(loc):
 	menu_options[list(menu_options)[-1] + 1] = 'Quit'
 	generate_menu(menu_options)
 	return configs_from_loc
+
+def mod_menu():
+	menu_options = {
+		1: 'Add Module to Config',
+		2: 'Remove Module from Config',
+		3: 'Quit'	
+	}
+
+	generate_menu(menu_options)

@@ -139,7 +139,118 @@ while (True):
 					break
 				else:
 					print('Please choose an option from the menu.')
+		case 2:
+			while True:
+				items = menus.type_menu(config.device_types)
+				option = int(input('Please enter your choice: '))
+				type_to_modify = func.check_selection(option,items,config.device_types)
 
+				func.clear_screen()
+				
+				print(
+					'------------------------------------------------------\n'
+					'Please choose the configuration you would like to modify:\n'
+					'------------------------------------------------------\n'
+				)
+
+				if((isinstance(type_to_modify,dict)) and (type_to_modify['name'])): # Choose config
+					menu_items = menus.config_list(type_to_modify['path'])
+					location_path = type_to_modify['path']
+					option = int(input('Please enter your choice: '))
+					filename = menu_items[option - 1]
+					hostname = filename.replace('.cfg', '')
+
+					if(option <= len(menu_items)): # if a config is chosen, are we adding or removing a module
+						func.get_file_from_server(type_to_modify['path'] + '/' + filename, filename) # Get the config file from the server
+						config_modules = []
+						with open(filename) as file: # read file into list per line
+							config_lines = file.readlines()
+							config_lines = [line.rstrip() for line in config_lines]
+
+						for line in config_lines: # pull lines that contain modules and add them to new list
+							if 'use' in line:
+								line = line.strip()
+								config_modules.append(line.replace('use ', ''))
+						config_modules.pop(0)
+
+						menus.mod_menu()
+						mod_option = int(input('Please enter your choice: '))
+
+						match mod_option:
+							case 1: # if adding show a list of all modules and have user choose one to add
+								while True:
+									service_menu = menus.build_service_menu(type_to_modify['basetype'], type_to_modify['OStype'], config_modules)
+									choice = int(input('Please enter your choice: '))
+									
+									if(choice <= len(service_menu)):
+										for i,opt in enumerate(service_menu):
+											if(i + 1 == choice):
+												choice = service_menu[opt]
+
+										skeleton = [
+											'define service {',
+											f'host_name {hostname}',
+											f'use {choice}',
+											'register 1',
+											'}'
+										]
+
+										func.write_config(filename,skeleton)
+										func.clear_screen()
+
+										print(
+											'------------------------------------------------------\n'
+											f'{func.key_value(choice, service_menu)} added to configuration.\n'
+											'------------------------------------------------------\n'
+										)
+										break
+									elif(choice == len(service_menu) + 1):
+										send = input("Are you ready to send config to server? (y/n)\n"
+											"NOTE: If you choose not to send to the server, the configuration will be discarded.\n")
+										
+										match send:
+											case 'y' | 'Y':
+												if(os.path.exists(filename)):
+													func.send_file_to_server(os.path.abspath(filename),type_to_modify['path'] + f'/{filename}')
+													os.remove(filename)
+													func.clear_screen()
+													
+													print(
+														'------------------------------------------------------\n'
+														f"New configuration made with name {filename} in {type_to_modify['path']}. Please make any additional changes inside the file.\n"
+														'------------------------------------------------------\n'
+													)
+													break
+											case 'n' | 'N':
+												if(os.path.exists(filename)):
+													os.remove(filename)
+												func.clear_screen()
+												break
+									else:
+										print('Please choose an option from the menu.')
+							case 2:
+								pass
+							case _:
+								pass
+					elif(option == len(menu_items) + 1):
+						func.clear_screen()
+						break
+					else:
+						print('Please choose an option from the menu.')
+				elif(type_to_modify == 0):
+					func.clear_screen()
+					break
+				else:
+					print('Please choose an option from the menu.')
+			func.restart_nagios()
+			#copy from server, delete on server, make modifications locally, copy back to server, delete locally, restart nagios.
+			# menu for add or delete module
+			# retrieve file from server
+			# break config into strings, assign to variable
+			# list modules already in config
+			# 
+			# if remove - search list for module you are looking for (use [module here]). remove lines that make up module (previous 2 lines, itself, and following two lines). Put config back together or continue manipulating
+			# if adding,  copy file from server, delete on server, write to file using open() and a+ to append to the end. copy back to server, restart nagios. Similar to custom menu section. Maybe make this a function since it is being re-used?
 		case 3:
 			while (True):
 				items = menus.type_menu(config.device_types) 							# Get the menu options from the generated menu
@@ -148,7 +259,7 @@ while (True):
 
 				if((isinstance(type_to_delete,dict)) and (type_to_delete['name'])):
 					# Generate the menu for the configuration deletion menu and receive input. del_menu returns the menu_options dictionary from the function for us later
-					menu_items = menus.del_menu(type_to_delete['path'])
+					menu_items = menus.config_list(type_to_delete['path'])
 					location_path = type_to_delete['path']
 					option = int(input('Please enter your choice: ')) # Here option is rewritten as a new selection. 
 					
