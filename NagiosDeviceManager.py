@@ -1,7 +1,5 @@
-from csv import list_dialects
 import os
 import func, menus, config
-from getpass import getpass
 
 func.catch_c()
 

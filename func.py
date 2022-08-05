@@ -1,4 +1,4 @@
-import config, menus
+import config
 import paramiko
 import os, signal
 
