@@ -1,298 +1,301 @@
 import os
-import func, menus, config
+import func
+import menus
+import config
 
 func.catch_c()
 
 # Main loop - Main Menu
 while (True):
-	# Create main menu and generate options
-	print(
-		"------------------------------------------------------\n"
-		"Main Menu\n"
-		"------------------------------------------------------\n"
-	)
+    # Create main menu and generate options
+    print(
+        "------------------------------------------------------\n"
+        "Main Menu\n"
+        "------------------------------------------------------\n"
+    )
 
-	menus.main_menu()
-	option = int(input('Please enter your choice: '))
+    menus.main_menu()
+    option = int(input('Please enter your choice: '))
 
-	func.clear_screen()
-	match option:
-		case 1:
-			# Receiving information about the device that is going to be added
-			hostname = input('Please enter the hostname of the device you are trying to add: ')
-			host_address = input('Please enter the IP address or FQDN (exampleHost.exampleDomain.com) of the device you are trying to add: ')
-			func.clear_screen()
+    func.clear_screen()
+    match option:
+        case 1:
+            # Receiving information about the device that is going to be added
+            hostname = input('Please enter the hostname of the device you are trying to add: ')
+            host_address = input('Please enter the IP address or FQDN (exampleHost.exampleDomain.com) of the device you are trying to add: ')
+            func.clear_screen()
 
-			# Displays the information entered previously
-			func.current_config_host(hostname, host_address)
+            # Displays the information entered previously
+            func.current_config_host(hostname, host_address)
 
-			# Generate the new configuration menu and wait for input from user
-			while (True):
-				items = menus.type_menu(config.device_types,True)
-				option = int(input('Please enter your choice: '))
-				device_to_create = func.check_selection(option,items,config.device_types)
-				
-				if((isinstance(device_to_create,dict)) and (device_to_create['name'])):
-					# Generates the configuration choice menu (configuration from a base file or one where checks can be added a la carte)
-					menus.config_menu()
-					option = int(input('Please enter your choice: '))
-					
-					# Builds the configuration based on your previous choice. If a la carte option is picked a secondary menu will be generated
-					#func.build_config(option,device_to_create,hostname,host_address)
+            # Generate the new configuration menu and wait for input from user
+            while (True):
+                items = menus.type_menu(config.device_types, True)
+                option = int(input('Please enter your choice: '))
+                device_to_create = func.check_selection(option, items, config.device_types)
 
-					match option:
-						# New Config from base configuration
-						case 1:
-							try:
-								func.run_remote_command(f"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
-								func.run_remote_command(f"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
-								func.run_remote_command(f"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
+                if ((isinstance(device_to_create, dict)) and (device_to_create['name'])):
+                    # Generates the configuration choice menu (configuration from a base file or one where checks can be added a la carte)
+                    menus.config_menu()
+                    option = int(input('Please enter your choice: '))
 
-								print(
-									'------------------------------------------------------\n'
-									f"New configuration made with name {hostname}.cfg in {device_to_create['path']}. Please make any additional changes inside the file.\n"
-									'------------------------------------------------------\n'
-								)
-							except:
-								print("An error has occurred and a new configuration could not be saved.")
+                    # Builds the configuration based on your previous choice. If a la carte option is picked a secondary menu will be generated
 
-						# New custom config from available options
-						case 2:
-							#try:
-								filename = f'{hostname}.cfg'
+                    match option:
+                        # New Config from base configuration
+                        case 1:
+                            try:
+                                func.run_remote_command(fr"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
+                                func.run_remote_command(fr"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
+                                func.run_remote_command(fr"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
 
-								# Initialize new configuration file locally
-								default_config = [
-									'define host {',
-									f'host_name {hostname}',
-									f'address {host_address}',
-									f'use base_{device_to_create["OStype"]}_{device_to_create["platform"]}',
-									'register 1',
-									'}'
-								]
+                                print(
+                                    '------------------------------------------------------\n'
+                                    f"New configuration made with name {hostname}.cfg in {device_to_create['path']}.\n"
+                                    "Please make any additional changes inside the file.\n"
+                                    '------------------------------------------------------\n'
+                                )
+                            except Exception:
+                                print(
+                                    "An error has occurred and a new configuration could not be saved."
+                                )
 
-								func.write_config(filename,default_config)
-								func.clear_screen()
-								while True:
-									service_menu = menus.build_service_menu(device_to_create['basetype'], device_to_create['OStype'])
-									choice = int(input('Please enter your choice: '))
-									
-									if(choice <= len(service_menu)):
-										for i,opt in enumerate(service_menu):
-											if(i + 1 == choice):
-												choice = service_menu[opt]
+                        # New custom config from available options
+                        case 2:
+                            filename = f'{hostname}.cfg'
 
-										skeleton = [
-											'define service {',
-											f'host_name {hostname}',
-											f'use {choice}',
-											'register 1',
-											'}'
-										]
+                            # Initialize new configuration file locally
+                            default_config = [
+                                'define host {',
+                                f'host_name {hostname}',
+                                f'address {host_address}',
+                                f'use base_{device_to_create["OStype"]}_{device_to_create["platform"]}',
+                                'register 1',
+                                '}'
+                            ]
 
-										func.write_config(filename,skeleton)
-										func.clear_screen()
+                            func.write_config(filename, default_config)
+                            func.clear_screen()
+                            while True:
+                                service_menu = menus.build_service_menu(device_to_create['basetype'], device_to_create['OStype'])
+                                choice = int(input('Please enter your choice: '))
 
-										print(
-											'------------------------------------------------------\n'
-											f'{func.key_value(choice, service_menu)} added to configuration.\n'
-											'------------------------------------------------------\n'
-										)
-									elif(choice == len(service_menu) + 1):
-										send = input("Are you ready to send config to server? (y/n)\n"
-											"NOTE: If you choose not to send to the server, the configuration will be discarded.\n")
-										
-										match send:
-											case 'y' | 'Y':
-												if(os.path.exists(filename)):
-													func.send_file_to_server(os.path.abspath(filename),device_to_create['path'] + f'/{filename}')
-													os.remove(filename)
-													func.clear_screen()
-													
-													print(
-														'------------------------------------------------------\n'
-														f"New configuration made with name {filename} in {device_to_create['path']}. Please make any additional changes inside the file.\n"
-														'------------------------------------------------------\n'
-													)
-													break
-											case 'n' | 'N':
-												if(os.path.exists(filename)):
-													os.remove(filename)
-												func.clear_screen()
-												break
-									else:
-										print('Please choose an option from the menu.')
+                                if (choice <= len(service_menu)):
+                                    for i, opt in enumerate(service_menu):
+                                        if (i + 1 == choice):
+                                            choice = service_menu[opt]
 
-								
-							#except:
-								#print("An error has occurred and a new configuration could not be saved.")				
-						case 3:
-							break
+                                    skeleton = [
+                                        'define service {',
+                                        f'host_name {hostname}',
+                                        f'use {choice}',
+                                        'register 1',
+                                        '}'
+                                    ]
 
-						case _:
-							print('Please choose an option from the menu.')
+                                    func.write_config(filename, skeleton)
+                                    func.clear_screen()
 
-					func.restart_nagios()
-					break
-				elif(device_to_create == 0):
-					func.clear_screen()
-					break
-				else:
-					print('Please choose an option from the menu.')
-		case 2:
-			while True:
-				items = menus.type_menu(config.device_types)
-				option = int(input('Please enter your choice: '))
-				type_to_modify = func.check_selection(option,items,config.device_types)
+                                    print(
+                                        '------------------------------------------------------\n'
+                                        f'{func.key_value(choice, service_menu)} added to configuration.\n'
+                                        '------------------------------------------------------\n'
+                                    )
+                                elif (choice == len(service_menu) + 1):
+                                    send = input(
+                                        "Are you ready to send config to server? (y/n)\n"
+                                        "NOTE: If you choose not to send to the server, the configuration will be discarded.\n"
+                                    )
 
-				func.clear_screen()
-				
-				print(
-					'------------------------------------------------------\n'
-					'Please choose the configuration you would like to modify:\n'
-					'------------------------------------------------------\n'
-				)
+                                    match send:
+                                        case 'y' | 'Y':
+                                            if (os.path.exists(filename)):
+                                                func.send_file_to_server(os.path.abspath(filename), device_to_create['path'] + f'/{filename}')
+                                                os.remove(filename)
+                                                func.clear_screen()
 
-				if((isinstance(type_to_modify,dict)) and (type_to_modify['name'])): # Choose config
-					menu_items = menus.config_list(type_to_modify['path'])
-					location_path = type_to_modify['path']
-					option = int(input('Please enter your choice: '))
-					filename = menu_items[option - 1]
-					hostname = filename.replace('.cfg', '')
+                                                print(
+                                                    '------------------------------------------------------\n'
+                                                    f"New configuration made with name {filename} in {device_to_create['path']}. Please make any additional changes inside the file.\n"
+                                                    '------------------------------------------------------\n'
+                                                )
+                                                break
+                                        case 'n' | 'N':
+                                            if (os.path.exists(filename)):
+                                                os.remove(filename)
+                                            func.clear_screen()
+                                            break
+                                else:
+                                    print('Please choose an option from the menu.')
+                        case 3:
+                            break
 
-					if(option <= len(menu_items)): # if a config is chosen, are we adding or removing a module
-						func.get_file_from_server(type_to_modify['path'] + '/' + filename, filename) # Get the config file from the server
-						config_modules = []
-						with open(filename) as file: # read file into list per line
-							config_lines = file.readlines()
-							config_lines = [line.rstrip() for line in config_lines]
+                        case _:
+                            print('Please choose an option from the menu.')
 
-						for line in config_lines: # pull lines that contain modules and add them to new list
-							if 'use' in line:
-								line = line.strip()
-								config_modules.append(line.replace('use ', ''))
-						config_modules.pop(0)
+                    func.restart_nagios()
+                    break
+                elif (device_to_create == 0):
+                    func.clear_screen()
+                    break
+                else:
+                    print('Please choose an option from the menu.')
+        case 2:
+            while True:
+                items = menus.type_menu(config.device_types)
+                option = int(input('Please enter your choice: '))
+                type_to_modify = func.check_selection(option,items,config.device_types)
 
-						menus.mod_menu()
-						mod_option = int(input('Please enter your choice: '))
+                func.clear_screen()
 
-						match mod_option:
-							case 1: # if adding show a list of all modules and have user choose one to add
-								while True:
-									service_menu = menus.build_service_menu(type_to_modify['basetype'], type_to_modify['OStype'], config_modules)
-									choice = int(input('Please enter your choice: '))
-									
-									if(choice <= len(service_menu)):
-										for i,opt in enumerate(service_menu):
-											if(i + 1 == choice):
-												choice = service_menu[opt]
+                print(
+                    '------------------------------------------------------\n'
+                    'Please choose the configuration you would like to modify:\n'
+                    '------------------------------------------------------\n'
+                )
 
-										skeleton = [
-											'define service {',
-											f'host_name {hostname}',
-											f'use {choice}',
-											'register 1',
-											'}'
-										]
+                if ((isinstance(type_to_modify, dict)) and (type_to_modify['name'])):  # Choose config
+                    menu_items = menus.config_list(type_to_modify['path'])
+                    location_path = type_to_modify['path']
+                    option = int(input('Please enter your choice: '))
+                    filename = menu_items[option - 1]
+                    hostname = filename.replace('.cfg', '')
 
-										func.write_config(filename,skeleton)
-										func.clear_screen()
+                    if (option <= len(menu_items)):  # if a config is chosen, are we adding or removing a module
+                        func.get_file_from_server(type_to_modify['path'] + '/' + filename, filename)  # Get the config file from the server
+                        config_modules = []
+                        with open(filename) as file:  # read file into list per line
+                            config_lines = file.readlines()
+                            config_lines = [line.rstrip() for line in config_lines]
 
-										print(
-											'------------------------------------------------------\n'
-											f'{func.key_value(choice, service_menu)} added to configuration.\n'
-											'------------------------------------------------------\n'
-										)
-										break
-									elif(choice == len(service_menu) + 1):
-										send = input("Are you ready to send config to server? (y/n)\n"
-											"NOTE: If you choose not to send to the server, the configuration will be discarded.\n")
-										
-										match send:
-											case 'y' | 'Y':
-												if(os.path.exists(filename)):
-													func.send_file_to_server(os.path.abspath(filename),type_to_modify['path'] + f'/{filename}')
-													os.remove(filename)
-													func.clear_screen()
-													
-													print(
-														'------------------------------------------------------\n'
-														f"New configuration made with name {filename} in {type_to_modify['path']}. Please make any additional changes inside the file.\n"
-														'------------------------------------------------------\n'
-													)
-													break
-											case 'n' | 'N':
-												if(os.path.exists(filename)):
-													os.remove(filename)
-												func.clear_screen()
-												break
-									else:
-										print('Please choose an option from the menu.')
-							case 2:
-								pass
-							case _:
-								pass
-					elif(option == len(menu_items) + 1):
-						func.clear_screen()
-						break
-					else:
-						print('Please choose an option from the menu.')
-				elif(type_to_modify == 0):
-					func.clear_screen()
-					break
-				else:
-					print('Please choose an option from the menu.')
-			func.restart_nagios()
-			#copy from server, delete on server, make modifications locally, copy back to server, delete locally, restart nagios.
-			# menu for add or delete module
-			# retrieve file from server
-			# break config into strings, assign to variable
-			# list modules already in config
-			# 
-			# if remove - search list for module you are looking for (use [module here]). remove lines that make up module (previous 2 lines, itself, and following two lines). Put config back together or continue manipulating
-			# if adding,  copy file from server, delete on server, write to file using open() and a+ to append to the end. copy back to server, restart nagios. Similar to custom menu section. Maybe make this a function since it is being re-used?
-		case 3:
-			while (True):
-				items = menus.type_menu(config.device_types) 							# Get the menu options from the generated menu
-				option = int(input('Please enter your choice: ')) 	# Receive input about which device type to choose
-				type_to_delete = func.check_selection(option,items,config.device_types)
+                        for line in config_lines:  # pull lines that contain modules and add them to new list
+                            if 'use' in line:
+                                line = line.strip()
+                                config_modules.append(line.replace('use ', ''))
+                        config_modules.pop(0)
 
-				if((isinstance(type_to_delete,dict)) and (type_to_delete['name'])):
-					# Generate the menu for the configuration deletion menu and receive input. del_menu returns the menu_options dictionary from the function for us later
-					menu_items = menus.config_list(type_to_delete['path'])
-					location_path = type_to_delete['path']
-					option = int(input('Please enter your choice: ')) # Here option is rewritten as a new selection. 
-					
-					# Checks to see if the selected option is apart of the configurations or is the menu option to exit that menu.
-					# Runs a confirmation to make sure user wants to delete the configuration file they have selected.
-					# Otherwise, it exits the menu
-					if(option <= len(menu_items)):
-						func.clear_screen()
-						confirm = str(input(f"Are you sure you want to delete '{menu_items[option - 1]}'? (y/n)\n"))
-							
-						match confirm:
-							case 'y' | 'Y':
-								func.clear_screen()
-								print(f"Config '{menu_items[option - 1]}' has been deleted")
-								func.delete_config(location_path,menu_items[option - 1])
-							case 'n' | 'N':
-								break
+                        menus.mod_menu()
+                        mod_option = int(input('Please enter your choice: '))
 
-					elif(option == len(menu_items) + 1):
-						func.clear_screen()
-						break
-					else:
-						print('Please choose an option from the menu.')
-				elif(type_to_delete == 0):							
-					func.clear_screen()
-					break
-				else:
-					print('Please choose an option from the menu.')
+                        match mod_option:
+                            case 1:  # if adding show a list of all modules and have user choose one to add
+                                while True:
+                                    service_menu = menus.build_service_menu(type_to_modify['basetype'], type_to_modify['OStype'], config_modules)
+                                    choice = int(input('Please enter your choice: '))
 
-		case 4:
-			func.restart_nagios()
-		case 5:
-			func.clear_screen()
-			break
-		case _:
-			print('Please choose an option from the menu.')
+                                    if (choice <= len(service_menu)):
+                                        for i, opt in enumerate(service_menu):
+                                            if (i + 1 == choice):
+                                                choice = service_menu[opt]
+
+                                        skeleton = [
+                                            'define service {',
+                                            f'host_name {hostname}',
+                                            f'use {choice}',
+                                            'register 1',
+                                            '}'
+                                        ]
+
+                                        func.write_config(filename, skeleton)
+                                        func.clear_screen()
+
+                                        print(
+                                            '------------------------------------------------------\n'
+                                            f'{func.key_value(choice, service_menu)} added to configuration.\n'
+                                            '------------------------------------------------------\n'
+                                        )
+                                        break
+                                    elif (choice == len(service_menu) + 1):
+                                        send = input(
+                                            "Are you ready to send config to server? (y/n)\n"
+                                            "NOTE: If you choose not to send to the server, the configuration will be discarded.\n"
+                                        )
+
+                                        match send:
+                                            case 'y' | 'Y':
+                                                if (os.path.exists(filename)):
+                                                    func.send_file_to_server(os.path.abspath(filename), type_to_modify['path'] + f'/{filename}')
+                                                    os.remove(filename)
+                                                    func.clear_screen()
+
+                                                    print(
+                                                        '------------------------------------------------------\n'
+                                                        f"New configuration made with name {filename} in {type_to_modify['path']}. Please make any additional changes inside the file.\n"
+                                                        '------------------------------------------------------\n'
+                                                    )
+                                                    break
+                                            case 'n' | 'N':
+                                                if (os.path.exists(filename)):
+                                                    os.remove(filename)
+                                                func.clear_screen()
+                                                break
+                                    else:
+                                        print('Please choose an option from the menu.')
+                            case 2:
+                                pass
+                            case _:
+                                pass
+                    elif (option == len(menu_items) + 1):
+                        func.clear_screen()
+                        break
+                    else:
+                        print('Please choose an option from the menu.')
+                elif (type_to_modify == 0):
+                    func.clear_screen()
+                    break
+                else:
+                    print('Please choose an option from the menu.')
+            func.restart_nagios()
+            # copy from server, delete on server, make modifications locally, copy back to server, delete locally, restart nagios.
+            # menu for add or delete module
+            # retrieve file from server
+            # break config into strings, assign to variable
+            # list modules already in config
+            #
+            # if remove - search list for module you are looking for (use [module here]). remove lines that make up module (previous 2 lines, itself, and following two lines). Put config back together or continue manipulating
+            # if adding,  copy file from server, delete on server, write to file using open() and a+ to append to the end. copy back to server, restart nagios. Similar to custom menu section. Maybe make this a function since it is being re-used?
+        case 3:
+            while (True):
+                items = menus.type_menu(config.device_types) 							# Get the menu options from the generated menu
+                option = int(input('Please enter your choice: ')) 	# Receive input about which device type to choose
+                type_to_delete = func.check_selection(option,items,config.device_types)
+
+                if ((isinstance(type_to_delete, dict)) and (type_to_delete['name'])):
+                    # Generate the menu for the configuration deletion menu and receive input. del_menu returns the menu_options dictionary from the function for us later
+                    menu_items = menus.config_list(type_to_delete['path'])
+                    location_path = type_to_delete['path']
+                    option = int(input('Please enter your choice: ')) # Here option is rewritten as a new selection. 
+
+                    # Checks to see if the selected option is apart of the configurations or is the menu option to exit that menu.
+                    # Runs a confirmation to make sure user wants to delete the configuration file they have selected.
+                    # Otherwise, it exits the menu
+                    if (option <= len(menu_items)):
+                        func.clear_screen()
+                        confirm = str(input(f"Are you sure you want to delete '{menu_items[option - 1]}'? (y/n)\n"))
+
+                        match confirm:
+                            case 'y' | 'Y':
+                                func.clear_screen()
+                                print(f"Config '{menu_items[option - 1]}' has been deleted")
+                                func.delete_config(location_path, menu_items[option - 1])
+                            case 'n' | 'N':
+                                break
+
+                    elif (option == len(menu_items) + 1):
+                        func.clear_screen()
+                        break
+                    else:
+                        print('Please choose an option from the menu.')
+                elif (type_to_delete == 0):
+                    func.clear_screen()
+                    break
+                else:
+                    print('Please choose an option from the menu.')
+
+        case 4:
+            func.restart_nagios()
+        case 5:
+            func.clear_screen()
+            break
+        case _:
+            print('Please choose an option from the menu.')
