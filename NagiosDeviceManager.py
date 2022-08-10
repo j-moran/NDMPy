@@ -204,7 +204,7 @@ while (True):
                                             f'{func.key_value(choice, service_menu)} added to configuration.\n'
                                             '------------------------------------------------------\n'
                                         )
-                                        break
+                                        config_modules.append(choice)
                                     elif (choice == len(service_menu) + 1):
                                         send = input(
                                             "Are you ready to send config to server? (y/n)\n"
