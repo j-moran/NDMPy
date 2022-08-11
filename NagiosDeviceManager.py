@@ -63,7 +63,7 @@ while (True):
                         # New custom config from available options
                         case 2:
                             filename = f'{hostname}.cfg'
-
+                            modules = []
                             # Initialize new configuration file locally
                             default_config = [
                                 'define host {',
@@ -77,56 +77,12 @@ while (True):
                             func.write_config(filename, default_config)
                             func.clear_screen()
                             while True:
-                                service_menu = menus.build_service_menu(device_to_create['basetype'], device_to_create['OStype'])
-                                choice = int(input('Please enter your choice: '))
-
-                                if (choice <= len(service_menu)):
-                                    for i, opt in enumerate(service_menu):
-                                        if (i + 1 == choice):
-                                            choice = service_menu[opt]
-
-                                    skeleton = [
-                                        'define service {',
-                                        f'host_name {hostname}',
-                                        f'use {choice}',
-                                        'register 1',
-                                        '}'
-                                    ]
-
-                                    func.write_config(filename, skeleton)
-                                    func.clear_screen()
-
-                                    print(
-                                        '------------------------------------------------------\n'
-                                        f'{func.key_value(choice, service_menu)} added to configuration.\n'
-                                        '------------------------------------------------------\n'
-                                    )
-                                elif (choice == len(service_menu) + 1):
-                                    send = input(
-                                        "Are you ready to send config to server? (y/n)\n"
-                                        "NOTE: If you choose not to send to the server, the configuration will be discarded.\n"
-                                    )
-
-                                    match send:
-                                        case 'y' | 'Y':
-                                            if (os.path.exists(filename)):
-                                                func.send_file_to_server(os.path.abspath(filename), device_to_create['path'] + f'/{filename}')
-                                                os.remove(filename)
-                                                func.clear_screen()
-
-                                                print(
-                                                    '------------------------------------------------------\n'
-                                                    f"New configuration made with name {filename} in {device_to_create['path']}. Please make any additional changes inside the file.\n"
-                                                    '------------------------------------------------------\n'
-                                                )
-                                                break
-                                        case 'n' | 'N':
-                                            if (os.path.exists(filename)):
-                                                os.remove(filename)
-                                            func.clear_screen()
-                                            break
+                                new_module = func.add_module(filename, hostname, device_to_create, modules)
+                                
+                                if(new_module == 0):
+                                    break
                                 else:
-                                    print('Please choose an option from the menu.')
+                                    modules.append(new_module)
                         case 3:
                             break
 
@@ -180,57 +136,12 @@ while (True):
                         match mod_option:
                             case 1:  # if adding show a list of all modules and have user choose one to add
                                 while True:
-                                    service_menu = menus.build_service_menu(type_to_modify['basetype'], type_to_modify['OStype'], config_modules)
-                                    choice = int(input('Please enter your choice: '))
-
-                                    if (choice <= len(service_menu)):
-                                        for i, opt in enumerate(service_menu):
-                                            if (i + 1 == choice):
-                                                choice = service_menu[opt]
-
-                                        skeleton = [
-                                            'define service {',
-                                            f'host_name {hostname}',
-                                            f'use {choice}',
-                                            'register 1',
-                                            '}'
-                                        ]
-
-                                        func.write_config(filename, skeleton)
-                                        func.clear_screen()
-
-                                        print(
-                                            '------------------------------------------------------\n'
-                                            f'{func.key_value(choice, service_menu)} added to configuration.\n'
-                                            '------------------------------------------------------\n'
-                                        )
-                                        config_modules.append(choice)
-                                    elif (choice == len(service_menu) + 1):
-                                        send = input(
-                                            "Are you ready to send config to server? (y/n)\n"
-                                            "NOTE: If you choose not to send to the server, the configuration will be discarded.\n"
-                                        )
-
-                                        match send:
-                                            case 'y' | 'Y':
-                                                if (os.path.exists(filename)):
-                                                    func.send_file_to_server(os.path.abspath(filename), type_to_modify['path'] + f'/{filename}')
-                                                    os.remove(filename)
-                                                    func.clear_screen()
-
-                                                    print(
-                                                        '------------------------------------------------------\n'
-                                                        f"New configuration made with name {filename} in {type_to_modify['path']}. Please make any additional changes inside the file.\n"
-                                                        '------------------------------------------------------\n'
-                                                    )
-                                                    break
-                                            case 'n' | 'N':
-                                                if (os.path.exists(filename)):
-                                                    os.remove(filename)
-                                                func.clear_screen()
-                                                break
+                                    new_module = func.add_module(filename, hostname, type_to_modify, config_modules)
+                                
+                                    if(new_module == 0):
+                                        break
                                     else:
-                                        print('Please choose an option from the menu.')
+                                        config_modules.append(new_module)
                             case 2:
                                 pass
                             case _:
