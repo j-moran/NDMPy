@@ -15,3 +15,12 @@ Nagios Device Manager
 ### NDM Setup
 - Setup config file
 - Setup service config
+
+
+## Things to Do Still
+- Implement ability to remove modules from a config
+- Create base configs from main menu
+- some sort of initialization process? (This is a maybe. Most things should be taken care of in the getting started...)
+- Actually write the getting started
+- - Setting up Service
+- - Setting up device templates

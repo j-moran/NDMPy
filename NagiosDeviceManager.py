@@ -142,7 +142,7 @@ while (True):
                                         break
                                     else:
                                         config_modules.append(new_module)
-                            case 2:
+                            case 2:  # Remove modules from config
                                 pass
                             case _:
                                 pass
