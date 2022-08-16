@@ -26,3 +26,4 @@ I am seeking to build a relatively usable Python application that will allow you
 - [ ] Actually write the getting started
     - [ ] Setting up Services
     - [ ] Setting up device templates
+- [ ] Clean up repo and make project more presentable
