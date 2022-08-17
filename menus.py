@@ -42,7 +42,7 @@ def type_menu(dict, mod=False):
     return menu_options
 
 
-def build_service_menu(service, OS, *configfile):
+def build_service_menu(service, OS, mod = '', *configfile):
     service = service + '_services'
     OS = OS + '_services'
 
@@ -53,9 +53,14 @@ def build_service_menu(service, OS, *configfile):
     )
 
     if (configfile):
-        for file in configfile:
-            for item in file:
-                del combined_list[func.key_value(item, combined_list)]
+        match mod:
+            case 'add':
+                for file in configfile:
+                    for item in file:
+                        del combined_list[func.key_value(item, combined_list)]
+            
+            case 'delete':
+                pass 
 
     type_menu(combined_list)
 

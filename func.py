@@ -116,7 +116,7 @@ def write_config(filename, lines):
 			f.write('\n')
 
 def add_module(filename, hostname, device_type, module_list):
-	service_menu = menus.build_service_menu(device_type['basetype'], device_type['OStype'], module_list)
+	service_menu = menus.build_service_menu(device_type['basetype'], device_type['OStype'], 'add', module_list)
 	choice = int(input('Please enter your choice: '))
 
 	if (choice <= len(service_menu)):
