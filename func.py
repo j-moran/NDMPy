@@ -115,6 +115,32 @@ def write_config(filename, lines):
 			f.write(line)
 			f.write('\n')
 
+
+def send_config(filename, device_type):
+	send = input(
+			"Are you ready to send config to server? (y/n)\n"
+			"NOTE: If you choose not to send to the server, the configuration will be discarded.\n"
+		)
+
+	match send:
+		case 'y' | 'Y':
+			if (os.path.exists(filename)):
+				send_file_to_server(os.path.abspath(filename), device_type['path'] + f'/{filename}')
+				os.remove(filename)
+				clear_screen()
+
+				print(
+					'------------------------------------------------------\n'
+					f"New configuration made with name {filename} in {device_type['path']}. Please make any additional changes inside the file.\n"
+					'------------------------------------------------------\n'
+				)
+				return 0
+		case 'n' | 'N':
+			if (os.path.exists(filename)):
+				os.remove(filename)
+			clear_screen()
+			return 0
+
 def add_module(filename, hostname, device_type, module_list):
 	service_menu = menus.build_service_menu(device_type['basetype'], device_type['OStype'], 'add', module_list)
 	choice = int(input('Please enter your choice: '))
@@ -143,32 +169,34 @@ def add_module(filename, hostname, device_type, module_list):
 		
 		return choice
 	elif (choice == len(service_menu) + 1):
-		send = input(
-			"Are you ready to send config to server? (y/n)\n"
-			"NOTE: If you choose not to send to the server, the configuration will be discarded.\n"
-		)
+		send_config(filename, device_type)
 
-		match send:
-			case 'y' | 'Y':
-				if (os.path.exists(filename)):
-					send_file_to_server(os.path.abspath(filename), device_type['path'] + f'/{filename}')
-					os.remove(filename)
-					clear_screen()
-
-					print(
-						'------------------------------------------------------\n'
-						f"New configuration made with name {filename} in {device_type['path']}. Please make any additional changes inside the file.\n"
-						'------------------------------------------------------\n'
-					)
-					return 0
-			case 'n' | 'N':
-				if (os.path.exists(filename)):
-					os.remove(filename)
-				clear_screen()
-				return 0
 	else:
 		print('Please choose an option from the menu.')
 
+
+def del_module(filename, hostname, device_type, module_list):
+	service_menu = menus.build_service_menu(device_type['basetype'], device_type['OStype'], 'delete', module_list)
+	choice = int(input('Please enter your choice: '))
+
+	if (choice <= len(service_menu)):
+		for i, opt in enumerate(service_menu):
+			if (i + 1 == choice):
+				choice = service_menu[opt]
+				
+		with open(filename, 'r') as f:
+			lines = f.readlines()
+		
+		with open(filename, 'w') as f:
+			for line in lines:
+				
+		return choice
+
+	elif (choice == len(service_menu) + 1):
+		send_config(filename, device_type)
+
+	else:
+		print('Please choose an option from the menu.')
 
 #General Functions
 

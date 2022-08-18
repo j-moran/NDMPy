@@ -143,7 +143,8 @@ while (True):
                                     else:
                                         config_modules.append(new_module)
                             case 2:  # Remove modules from config
-                                pass
+                                service_menu = menus.build_service_menu(type_to_modify['basetype'],type_to_modify['OStype'], 'delete', config_modules)
+                                choice = int(input('Please enter your choice: '))
                             case _:
                                 pass
                     elif (option == len(menu_items) + 1):

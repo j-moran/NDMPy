@@ -32,12 +32,6 @@ def type_menu(dict, mod=False):
 
     menu_options[list(menu_options)[-1] + 1] = 'Quit'
 
-    print(
-        '------------------------------------------------------\n'
-        'Please choose the type of device:\n'
-        '------------------------------------------------------\n'
-    )
-
     generate_menu(menu_options)
     return menu_options
 
@@ -58,13 +52,19 @@ def build_service_menu(service, OS, mod = '', *configfile):
                 for file in configfile:
                     for item in file:
                         del combined_list[func.key_value(item, combined_list)]
-            
+                
+                type_menu(combined_list)
+                return combined_list
+
             case 'delete':
-                pass 
+                del_list = {}
+                for file in configfile:
+                    for module in file:
+                        if module in combined_list.values():
+                            del_list[func.key_value(module, combined_list)] = module
 
-    type_menu(combined_list)
-
-    return combined_list
+                type_menu(del_list)
+                return del_list
 
 
 def config_menu():
