@@ -178,21 +178,39 @@ def add_module(filename, hostname, device_type, module_list):
 def del_module(filename, hostname, device_type, module_list):
 	service_menu = menus.build_service_menu(device_type['basetype'], device_type['OStype'], 'delete', module_list)
 	choice = int(input('Please enter your choice: '))
+	target = 0
 
-	if (choice <= len(service_menu)):
+	if ((choice <= len(service_menu)) and (choice != 0)):
 		for i, opt in enumerate(service_menu):
 			if (i + 1 == choice):
 				choice = service_menu[opt]
 				
 		with open(filename, 'r') as f:
 			lines = f.readlines()
-		
+
+		for i,line in enumerate(lines):
+				if choice in line:
+					target = i - 2
+					break
+			
+		for i in range(0,5):
+			del lines[target]
+
 		with open(filename, 'w') as f:
 			for line in lines:
-				
+				f.write(line)
+
+		clear_screen()
+
+		print(
+			'------------------------------------------------------\n'
+			f'{key_value(choice, service_menu)} removed from configuration.\n'
+			'------------------------------------------------------\n'
+		)
+
 		return choice
 
-	elif (choice == len(service_menu) + 1):
+	elif ((choice == len(service_menu) + 1) or (choice == 0)):
 		send_config(filename, device_type)
 
 	else:

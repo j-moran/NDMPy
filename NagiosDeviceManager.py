@@ -143,8 +143,13 @@ while (True):
                                     else:
                                         config_modules.append(new_module)
                             case 2:  # Remove modules from config
-                                service_menu = menus.build_service_menu(type_to_modify['basetype'],type_to_modify['OStype'], 'delete', config_modules)
-                                choice = int(input('Please enter your choice: '))
+                                while True:
+                                    old_module = func.del_module(filename, hostname, type_to_modify, config_modules)
+
+                                    if(old_module == 0):
+                                        break
+                                    else:
+                                        config_modules.remove(old_module)
                             case _:
                                 pass
                     elif (option == len(menu_items) + 1):

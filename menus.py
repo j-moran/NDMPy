@@ -30,7 +30,10 @@ def type_menu(dict, mod=False):
     if (mod):
         menu_options[list(menu_options)[-1] + 1] = 'Modify device information'
 
-    menu_options[list(menu_options)[-1] + 1] = 'Quit'
+    if (menu_options):
+        menu_options[list(menu_options)[-1] + 1] = 'Quit'
+    else:
+        menu_options[0] = 'Quit'
 
     generate_menu(menu_options)
     return menu_options
