@@ -20,7 +20,7 @@ I am seeking to build a relatively usable Python application that will allow you
 
 
 ## Things to Do Still
-- [ ] Implement ability to remove modules from a config
+- [x] Implement ability to remove modules from a config
 - [ ] Create base configs from main menu
 - [ ] some sort of initialization process? (This is a maybe. Most things should be taken care of in the getting started...)
 - [ ] Actually write the getting started

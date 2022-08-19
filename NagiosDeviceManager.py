@@ -77,7 +77,7 @@ while (True):
                             func.write_config(filename, default_config)
                             func.clear_screen()
                             while True:
-                                new_module = func.add_module(filename, hostname, device_to_create, modules)
+                                new_module = func.mod_module(filename, hostname, device_to_create, modules, 'add')
                                 
                                 if(new_module == 0):
                                     break
@@ -117,6 +117,8 @@ while (True):
                     filename = menu_items[option - 1]
                     hostname = filename.replace('.cfg', '')
 
+                    func.clear_screen()
+
                     if (option <= len(menu_items)):  # if a config is chosen, are we adding or removing a module
                         func.get_file_from_server(type_to_modify['path'] + '/' + filename, filename)  # Get the config file from the server
                         config_modules = []
@@ -133,20 +135,24 @@ while (True):
                         menus.mod_menu()
                         mod_option = int(input('Please enter your choice: '))
 
+                        func.clear_screen()
+
                         match mod_option:
                             case 1:  # if adding show a list of all modules and have user choose one to add
                                 while True:
-                                    new_module = func.add_module(filename, hostname, type_to_modify, config_modules)
+                                    new_module = func.mod_module(filename, hostname, type_to_modify, config_modules, 'add')
                                 
                                     if(new_module == 0):
+                                        func.restart_nagios()
                                         break
                                     else:
                                         config_modules.append(new_module)
                             case 2:  # Remove modules from config
                                 while True:
-                                    old_module = func.del_module(filename, hostname, type_to_modify, config_modules)
+                                    old_module = func.mod_module(filename, hostname, type_to_modify, config_modules, 'delete')
 
                                     if(old_module == 0):
+                                        func.restart_nagios()
                                         break
                                     else:
                                         config_modules.remove(old_module)
