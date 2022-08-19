@@ -27,3 +27,4 @@ I am seeking to build a relatively usable Python application that will allow you
     - [ ] Setting up Services
     - [ ] Setting up device templates
 - [ ] Clean up repo and make project more presentable
+- [ ] Try to pull existing service configurations from remote nagios server using servicegroups and service names
