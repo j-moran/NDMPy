@@ -9,6 +9,7 @@ I am seeking to build a relatively usable Python application that will allow you
 - Nagios 4.6.0 (Tested, but should work on other versions as well)
 
 ## Getting Started
+The best place to get started with this project is the installation guide located in the wiki. You can check it out [here](https://github.com/j-moran/NDMPy/wiki)!
 
 ### Nagios Setup
 - Setup templates for services
