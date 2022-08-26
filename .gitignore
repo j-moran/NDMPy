@@ -3,3 +3,4 @@ config.py
 *.ui
 /menus
 main_menu.*
+TPs.txt
