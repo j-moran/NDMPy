@@ -3,6 +3,7 @@ import menus
 import paramiko
 import os
 import signal
+import re
 
 #OS Commands
 def run_remote_command(command):
@@ -101,13 +102,48 @@ def check_selection(option,menu_items,dict):
 
 
 #Config Management
+def generate_services(remote_service_config):
+	get_file_from_server(remote_service_config, 'servicesTest.cfg')
+
+	with open('servicesTest.cfg') as file:
+		doc = file.read()
+		
+	doclist = doc.split('}')
+	serviceDict = {}
+
+	for i,item in enumerate(doclist):
+		if (item != ''):
+			name = ''
+			desc = ''
+			srvgrp = ''
+		else:
+			continue
+
+		split_item = item.split('\n')
+
+		for j,chunk in enumerate(split_item):
+			
+			if (chunk == ''):
+				continue
+			if (re.search("^\s*name\s*.*$", chunk)):
+				name = (split_item[split_item.index(chunk)].replace('name', '')).strip()
+			if (re.search("^\s*service_description\s*.*$", chunk)):
+				desc = (split_item[split_item.index(chunk)].replace('service_description','')).strip()
+			if (re.search("^\s*servicegroups\s*.*$", chunk)):
+				srvgrp = (split_item[split_item.index(chunk)].replace('servicegroups','')).strip()
+				if (srvgrp not in serviceDict):
+					serviceDict[srvgrp] = {}
+
+		serviceDict[srvgrp][desc] = name
+
+	print(serviceDict)
 
 def delete_config(location, config_to_delete):
 	run_remote_command(f"rm {location}/{config_to_delete}")
 	restart_nagios()
 
-def view_configs():
-	pass
+#def view_configs():
+#	pass
 
 def write_config(filename, lines):
 	with open(filename, 'a+') as f:
