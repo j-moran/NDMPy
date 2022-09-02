@@ -102,16 +102,39 @@ def check_selection(option,menu_items,dict):
 
 
 #Config Management
-def generate_services(remote_service_config):
-	get_file_from_server(remote_service_config, 'servicesTest.cfg')
+def generate_services(remote_service_config,remote_servicegroup_config):
+	get_file_from_server(remote_service_config, 'services_local.cfg')
+	get_file_from_server(remote_servicegroup_config, 'servicegroups_local.cfg')
 
 	with open('servicesTest.cfg') as file:
-		doc = file.read()
-		
-	doclist = doc.split('}')
+		services_doc = file.read()
+
+	services_doc = services_doc.split('}')
+
+	with open('servicegroups.cfg') as file:
+		servicegroup_doc = file.read()
+
+	servicegroup_doc = servicegroup_doc.split('}')
+
 	serviceDict = {}
 
-	for i,item in enumerate(doclist):
+	for i,item in enumerate(servicegroup_doc):
+		if (item != ''):
+			srvgrp = ''
+		else:
+			continue
+
+		split_item = item.split('\n')
+
+		for j,chunk in enumerate(split_item):
+			if (chunk == ''):
+				continue
+			if(re.search("^\s*servicegroup_name\s*.*$", chunk)):
+				srvgrp = (split_item[split_item.index(chunk)].replace('servicegroup_name','')).strip()
+
+		serviceDict[srvgrp] = {}
+
+	for i,item in enumerate(services_doc):
 		if (item != ''):
 			name = ''
 			desc = ''
