@@ -1,3 +1,4 @@
+from distutils.log import error
 import config
 import menus
 import paramiko
@@ -6,24 +7,26 @@ import signal
 import re
 
 #OS Commands
-def run_remote_command(command):
-	host = config.server_host
 
+def run_remote_command(command):
 	try:
 		conn = paramiko.SSHClient()
 		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		conn.connect(host,username=config.username,password=config.password)
+		conn.connect(host=config.server_host, username=config.username, password=config.password)
 
 		stdin, stdout, stderr = conn.exec_command(command)
 
 		output = []
+		errors = []
 
 		if stderr.read() == b'':
 			for line in stdout.readlines():
 				output.append(line.strip())
 			return output
 		else:
-			print(stderr.read())
+			for line in stderr.readlines():
+				errors.append(line.strip())
+			return errors
 	except:
 		print("An error occurred while running command.")
 	finally:
@@ -31,19 +34,15 @@ def run_remote_command(command):
 			conn.close()
 
 def send_file_to_server(localfile,remotefile):
-	host = config.server_host
-
 	try:
 		conn = paramiko.SSHClient()
 		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		conn.connect(host, username=config.username, password=config.password)
+		conn.connect(host=config.server_host, username=config.username, password=config.password)
 
 		ftp_client=conn.open_sftp()
 		ftp_client.put(localfile,remotefile)
 		ftp_client.close()
 
-	#except:
-	#	print("An error occurred while running command.")
 	finally:
 		if conn:
 			conn.close()
@@ -100,18 +99,17 @@ def check_selection(option,menu_items,dict):
 		clear_screen()
 		return 0
 
-
 #Config Management
 def generate_services(remote_service_config,remote_servicegroup_config):
 	get_file_from_server(remote_service_config, 'services_local.cfg')
 	get_file_from_server(remote_servicegroup_config, 'servicegroups_local.cfg')
 
-	with open('servicesTest.cfg') as file:
+	with open('services_local.cfg') as file:
 		services_doc = file.read()
 
 	services_doc = services_doc.split('}')
 
-	with open('servicegroups.cfg') as file:
+	with open('servicegroups_local.cfg') as file:
 		servicegroup_doc = file.read()
 
 	servicegroup_doc = servicegroup_doc.split('}')
@@ -159,7 +157,9 @@ def generate_services(remote_service_config,remote_servicegroup_config):
 
 		serviceDict[srvgrp][desc] = name
 
-	print(serviceDict)
+	os.remove('services_local.cfg')
+	os.remove('servicegroups_local.cfg')
+	return serviceDict
 
 def delete_config(location, config_to_delete):
 	run_remote_command(f"rm {location}/{config_to_delete}")
@@ -266,6 +266,32 @@ def mod_module(filename, hostname, device_type, module_list, mod):
 		print('Please choose an option from the menu.')
 
 #General Functions
+
+def setup():
+	# 1. check to see if nagios is running
+	errors = []
+	try:
+		conn = paramiko.SSHClient()
+		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+		conn.connect(config.server_host,username=config.username,password=config.password)
+	except paramiko.SSHException as SSHerror:
+		SSHerror = "ERROR: An connection error occurred while connecting to Nagios server: " + str(SSHerror)
+		errors.append(SSHerror)
+	except TimeoutError:
+		errors.append("ERROR: Connection timed out while connecting to server. Please check config to make sure the server address is correct.")
+	finally:
+		if (conn):
+			conn.close()
+		if (len(errors) > 0):
+			for error in errors:
+				print(error)
+			exit()
+	# 2. check to make sure that needed directories exist
+	# 	2.1 If not, make them and add to nagios.cfg
+	device_types = config.device_types
+
+	for type in device_types:
+		run_remote_command(fr"ls {type['path']}")
 
 def merge(*dicts):
 	res = {}

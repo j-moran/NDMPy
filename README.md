@@ -28,4 +28,5 @@ The best place to get started with this project is the installation guide locate
     - [ ] Setting up Services
     - [ ] Setting up device templates
 - [ ] Clean up repo and make project more presentable
-- [ ] Try to pull existing service configurations from remote nagios server using servicegroups and service names
+- [x] Try to pull existing service configurations from remote nagios server using servicegroups and service names
+- [ ] Look into using configparser to handle config file

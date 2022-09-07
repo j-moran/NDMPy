@@ -1,5 +1,5 @@
 import func
-import services
+import config
 
 # Menus
 
@@ -40,13 +40,14 @@ def type_menu(dict, mod=False):
 
 
 def build_service_menu(service, OS, mod = '', *configfile):
+    service_types = func.generate_services(config.service_config, config.servicegroup_config)
     service = service + '_services'
     OS = OS + '_services'
 
     combined_list = func.merge(
-        services.service_types[service],
-        services.service_types[OS],
-        services.service_types['general_services']
+        service_types[service],
+        service_types[OS],
+        service_types['general_services']
     )
 
     if (configfile):

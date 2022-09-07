@@ -5,6 +5,8 @@ import config
 
 func.catch_c()
 
+func.setup()
+
 # Main loop - Main Menu
 while (True):
     # Create main menu and generate options
