@@ -12,23 +12,21 @@ def run_remote_command(command):
 	try:
 		conn = paramiko.SSHClient()
 		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		conn.connect(host=config.server_host, username=config.username, password=config.password)
+		conn.connect(config.server_host, username=config.username, password=config.password)
 
 		stdin, stdout, stderr = conn.exec_command(command)
 
 		output = []
-		errors = []
+		errors = stderr.readlines()
 
-		if stderr.read() == b'':
+		if (stderr == "b''"):
 			for line in stdout.readlines():
 				output.append(line.strip())
-			return output
-		else:
-			for line in stderr.readlines():
-				errors.append(line.strip())
-			return errors
-	except:
-		print("An error occurred while running command.")
+		
+		return output, errors
+	except Exception as e:
+		print("An error occurred while running command.\n")
+		print(e)
 	finally:
 		if conn:
 			conn.close()
@@ -288,10 +286,22 @@ def setup():
 			exit()
 	# 2. check to make sure that needed directories exist
 	# 	2.1 If not, make them and add to nagios.cfg
-	device_types = config.device_types
-
-	for type in device_types:
-		run_remote_command(fr"ls {type['path']}")
+	for device in config.device_types:
+		out, err = run_remote_command(f"ls {config.device_types[device]['path']}")
+		
+		if(len(err) > 0):
+			for e in err:
+				if('No such file or directory' in e):
+					print(
+						f"The directory \'{config.device_types[device]['path']}\' does not exist.\n"
+						f"NDMPy will create this folder for you so it does not create problems later.\n"
+					)
+					create_dir = input('If you would like to stop NNDMPy from creating this directory, type \"no/No\", otherwise, press \"Enter\": ')
+					
+					clear_screen()
+					
+					if (re.search('^[nN][oO]$', create_dir) == None):
+						run_remote_command(f"mkdir -p {config.device_types[device]['path']}")					
 
 def merge(*dicts):
 	res = {}

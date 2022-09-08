@@ -5,7 +5,8 @@ import config
 
 func.catch_c()
 
-func.setup()
+if(config.run_setup):
+    func.setup()
 
 # Main loop - Main Menu
 while (True):
