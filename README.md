@@ -23,10 +23,8 @@ The best place to get started with this project is the installation guide locate
 ## Things to Do Still
 - [x] Implement ability to remove modules from a config
 - [ ] Create base configs from main menu
-- [ ] some sort of initialization process? (This is a maybe. Most things should be taken care of in the getting started...)
-- [ ] Actually write the getting started
-    - [ ] Setting up Services
-    - [ ] Setting up device templates
+- [x] some sort of initialization process? In place. Simple checks for directories and checking connection to server
+- [x] Actually write the getting started
 - [ ] Clean up repo and make project more presentable
 - [x] Try to pull existing service configurations from remote nagios server using servicegroups and service names
 - [ ] Look into using configparser to handle config file

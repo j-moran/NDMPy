@@ -8,28 +8,36 @@ import re
 
 #OS Commands
 
-def run_remote_command(command):
+def server_connect(command = 'pass'):
+	errors = []
 	try:
 		conn = paramiko.SSHClient()
 		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		conn.connect(config.server_host, username=config.username, password=config.password)
+		conn.connect(config.server_host,username=config.username,password=config.password)
 
-		stdin, stdout, stderr = conn.exec_command(command)
+		if (command != 'pass'):
+			stdin, stdout, stderr = conn.exec_command(command)
+			
+			out = []
+			err = stderr.readlines()
 
-		output = []
-		errors = stderr.readlines()
-
-		if (stderr == "b''"):
 			for line in stdout.readlines():
-				output.append(line.strip())
-		
-		return output, errors
-	except Exception as e:
-		print("An error occurred while running command.\n")
-		print(e)
+				out.append(line.strip())
+
+			return out, err
+
+	except paramiko.SSHException as SSHerror:
+		SSHerror = "ERROR: An connection error occurred while connecting to Nagios server: " + str(SSHerror)
+		errors.append(SSHerror)
+	except TimeoutError:
+		errors.append("ERROR: Connection timed out while connecting to server. Please check config to make sure the server address is correct.")
 	finally:
-		if conn:
+		if (conn):
 			conn.close()
+		if (len(errors) > 0):
+			for error in errors:
+				print(error)
+			exit()
 
 def send_file_to_server(localfile,remotefile):
 	try:
@@ -63,6 +71,15 @@ def get_file_from_server(remotefile,localfile):
 		if conn:
 			conn.close()
 
+def check_for_item(filepath):
+	out, err = server_connect(f"ls {filepath}")
+		
+	if(len(err) > 0):
+		for e in err:
+			if('No such file or directory' in e):
+				return False
+	return True
+
 def clear_screen():
 	if os.name == "posix":
 		os.system("clear")
@@ -70,7 +87,7 @@ def clear_screen():
 		os.system("cls")
 
 def restart_nagios():
-	run_remote_command('sudo systemctl restart nagios.service')
+	server_connect('sudo systemctl restart nagios.service')
 
 def handler(signum, frame):
 	clear_screen()
@@ -98,6 +115,53 @@ def check_selection(option,menu_items,dict):
 		return 0
 
 #Config Management
+
+def delete_config(location, config_to_delete):
+	server_connect(f"rm {location}/{config_to_delete}")
+	restart_nagios()
+
+def write_config(filename, lines):
+	with open(filename, 'a+') as f:
+		for line in lines:
+			f.write(line)
+			f.write('\n')
+
+def check_if_registered():
+	pass
+
+def create_base_config(device_type, filename):
+	base_config_filename = device_type['basetype'] + '-base.cfg'
+	base_config_path = device_type['path'] + '/' + base_config_filename
+	
+	if (not check_for_item(base_config_path)): 
+		create_file = input(
+			"There is currently no base config for this device type. Would you like NDMPy to create one for you?\n"
+			"This file will not have any services added to it and is "
+			"Please type 'yes/Yes' or 'no/No': "
+		)
+
+		if (re.search('^[yY][eE][sS]$', create_file) != None):
+			if(not check_for_item(device_type['path'])):
+				server_connect(f"mkdir -p {device_type['path']}")
+			server_connect(f"touch {base_config_path}")
+
+			skeleton = [
+				"define host {",
+				"hostname base",
+				"address 0.0.0.0",
+				f"use base_{device_type['basetype']}",
+				"register 0",
+				"}"
+			]
+
+			get_file_from_server(base_config_path, base_config_filename)
+			# import to variable
+			# write lines in skel
+			# write back to server
+			# delete local
+		else:
+			return 0
+
 def generate_services(remote_service_config,remote_servicegroup_config):
 	get_file_from_server(remote_service_config, 'services_local.cfg')
 	get_file_from_server(remote_servicegroup_config, 'servicegroups_local.cfg')
@@ -158,20 +222,6 @@ def generate_services(remote_service_config,remote_servicegroup_config):
 	os.remove('services_local.cfg')
 	os.remove('servicegroups_local.cfg')
 	return serviceDict
-
-def delete_config(location, config_to_delete):
-	run_remote_command(f"rm {location}/{config_to_delete}")
-	restart_nagios()
-
-#def view_configs():
-#	pass
-
-def write_config(filename, lines):
-	with open(filename, 'a+') as f:
-		for line in lines:
-			f.write(line)
-			f.write('\n')
-
 
 def send_config(filename, device_type):
 	send = input(
@@ -266,28 +316,10 @@ def mod_module(filename, hostname, device_type, module_list, mod):
 #General Functions
 
 def setup():
-	# 1. check to see if nagios is running
-	errors = []
-	try:
-		conn = paramiko.SSHClient()
-		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		conn.connect(config.server_host,username=config.username,password=config.password)
-	except paramiko.SSHException as SSHerror:
-		SSHerror = "ERROR: An connection error occurred while connecting to Nagios server: " + str(SSHerror)
-		errors.append(SSHerror)
-	except TimeoutError:
-		errors.append("ERROR: Connection timed out while connecting to server. Please check config to make sure the server address is correct.")
-	finally:
-		if (conn):
-			conn.close()
-		if (len(errors) > 0):
-			for error in errors:
-				print(error)
-			exit()
 	# 2. check to make sure that needed directories exist
 	# 	2.1 If not, make them and add to nagios.cfg
 	for device in config.device_types:
-		out, err = run_remote_command(f"ls {config.device_types[device]['path']}")
+		out, err = server_connect(f"ls {config.device_types[device]['path']}")
 		
 		if(len(err) > 0):
 			for e in err:
@@ -301,7 +333,21 @@ def setup():
 					clear_screen()
 					
 					if (re.search('^[nN][oO]$', create_dir) == None):
-						run_remote_command(f"mkdir -p {config.device_types[device]['path']}")					
+						server_connect(f"mkdir -p {config.device_types[device]['path']}")
+	
+	# 3. End setup and flip setup flag in config
+	print('Setup has concluded. If you would like to run this setup again in the future, please change \'run_setup\' to \'False\' in your config file.')
+	input('Press \'Enter\' to continue...')
+	
+	with open('config.py', 'r') as file:
+		data = file.readlines()
+
+	data[data.index('run_setup = True\n')] = 'run_setup = False\n'
+
+	with open('config.py', 'w') as file:
+		file.writelines(data)
+	
+	clear_screen()
 
 def merge(*dicts):
 	res = {}

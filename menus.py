@@ -3,24 +3,27 @@ import config
 
 # Menus
 
-
+# Main function for generating menus. Takes menu_options as input from functions that call it.
 def generate_menu(menu_options):
     for key in menu_options.keys():
         print(key, ' - ', menu_options[key])
 
 
+# Main application menu
 def main_menu():
     menu_options = {
         1: 'Create a new device configuration',
         2: 'Modify an existing configuration',
         3: 'Delete an existing configuration',
         4: 'Restart Nagios Service',
-        5: 'Quit'
+        5: 'Additional Options',
+        6: 'Quit'
     }
 
     generate_menu(menu_options)
 
 
+# Generates the menu for most sub processes that deal with listing items from Nagios server (Configs, services, etc.)
 def type_menu(dict, mod=False):
     menu_options = {}
 
@@ -39,6 +42,7 @@ def type_menu(dict, mod=False):
     return menu_options
 
 
+# Takes several inputs in order to create the menu list for services available either to add or delete from a config
 def build_service_menu(service, OS, mod = '', *configfile):
     service_types = func.generate_services(config.service_config, config.servicegroup_config)
     service = service + '_services'
@@ -71,6 +75,7 @@ def build_service_menu(service, OS, mod = '', *configfile):
                 return del_list
 
 
+# Static menu for whether to create a new config from a base or from scratch
 def config_menu():
     menu_options = {
         1: 'Base Configuration',
@@ -86,7 +91,7 @@ def config_menu():
 
     generate_menu(menu_options)
 
-
+# Menu for the network device type to be added (STILL IN PROGRESS)
 def network_menu():
     menu_options = {
         1: 'Router (Not Available Yet)',
@@ -99,8 +104,9 @@ def network_menu():
     generate_menu(menu_options)
 
 
+# Creates the menu options that list all configs of a certain device type
 def config_list(loc):
-    configs_from_loc = func.run_remote_command(fr"ls {loc} | egrep '\.cfg$'")
+    configs_from_loc = func.server_connect(fr"ls {loc} | egrep '\.cfg$'")
     menu_options = {}
 
     for i, config in enumerate(configs_from_loc):
@@ -110,7 +116,7 @@ def config_list(loc):
     generate_menu(menu_options)
     return configs_from_loc
 
-
+# Static menu for either adding or removing a service mdule to/from a config
 def mod_menu():
     menu_options = {
         1: 'Add Module to Config',

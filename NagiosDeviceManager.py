@@ -4,7 +4,7 @@ import menus
 import config
 
 func.catch_c()
-
+func.server_connect()
 if(config.run_setup):
     func.setup()
 
@@ -48,9 +48,9 @@ while (True):
                         # New Config from base configuration
                         case 1:
                             try:
-                                func.run_remote_command(fr"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
-                                func.run_remote_command(fr"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
-                                func.run_remote_command(fr"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
+                                func.server_connect(fr"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
+                                func.server_connect(fr"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
+                                func.server_connect(fr"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
 
                                 print(
                                     '------------------------------------------------------\n'
