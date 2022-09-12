@@ -43,7 +43,7 @@ def send_file_to_server(localfile,remotefile):
 	try:
 		conn = paramiko.SSHClient()
 		conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-		conn.connect(host=config.server_host, username=config.username, password=config.password)
+		conn.connect(config.server_host, username=config.username, password=config.password)
 
 		ftp_client=conn.open_sftp()
 		ftp_client.put(localfile,remotefile)
@@ -129,14 +129,15 @@ def write_config(filename, lines):
 def check_if_registered():
 	pass
 
-def create_base_config(device_type, filename):
+def create_base_config(device_type):
 	base_config_filename = device_type['basetype'] + '-base.cfg'
 	base_config_path = device_type['path'] + '/' + base_config_filename
 	
 	if (not check_for_item(base_config_path)): 
 		create_file = input(
 			"There is currently no base config for this device type. Would you like NDMPy to create one for you?\n"
-			"This file will not have any services added to it and is "
+			"This file will not have any services associate with it except if there was a check associated with your base template.\n\n"
+			"If you would like to modify this base configuration in the future, please use the \"Modify Configuration\" menu option\nfrom the main menu.\n\n"
 			"Please type 'yes/Yes' or 'no/No': "
 		)
 
@@ -146,20 +147,24 @@ def create_base_config(device_type, filename):
 			server_connect(f"touch {base_config_path}")
 
 			skeleton = [
-				"define host {",
-				"hostname base",
-				"address 0.0.0.0",
-				f"use base_{device_type['basetype']}",
-				"register 0",
-				"}"
+				"define host {\n",
+				"hostname base\n",
+				"address 0.0.0.0\n",
+				f"use base_{device_type['basetype']}\n",
+				"register 0\n",
+				"}\n"
 			]
 
 			get_file_from_server(base_config_path, base_config_filename)
-			# import to variable
-			# write lines in skel
-			# write back to server
-			# delete local
+			
+			with open(base_config_filename, 'w') as file:
+				file.writelines(skeleton)
+			
+			send_file_to_server(base_config_filename, base_config_path)
+			os.remove(base_config_filename)
+			clear_screen()
 		else:
+			clear_screen()
 			return 0
 
 def generate_services(remote_service_config,remote_servicegroup_config):

@@ -172,14 +172,6 @@ while (True):
                 else:
                     print('Please choose an option from the menu.')
             func.restart_nagios()
-            # copy from server, delete on server, make modifications locally, copy back to server, delete locally, restart nagios.
-            # menu for add or delete module
-            # retrieve file from server
-            # break config into strings, assign to variable
-            # list modules already in config
-            #
-            # if remove - search list for module you are looking for (use [module here]). remove lines that make up module (previous 2 lines, itself, and following two lines). Put config back together or continue manipulating
-            # if adding,  copy file from server, delete on server, write to file using open() and a+ to append to the end. copy back to server, restart nagios. Similar to custom menu section. Maybe make this a function since it is being re-used?
         case 3:
             while (True):
                 items = menus.type_menu(config.device_types) 							# Get the menu options from the generated menu
@@ -217,10 +209,9 @@ while (True):
                     break
                 else:
                     print('Please choose an option from the menu.')
-
         case 4:
             func.restart_nagios()
-        case 5:
+        case 6:
             func.clear_screen()
             break
         case _:

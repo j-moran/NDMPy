@@ -106,7 +106,7 @@ def network_menu():
 
 # Creates the menu options that list all configs of a certain device type
 def config_list(loc):
-    configs_from_loc = func.server_connect(fr"ls {loc} | egrep '\.cfg$'")
+    configs_from_loc,err = func.server_connect(fr"ls {loc} | egrep '\.cfg$'")
     menu_options = {}
 
     for i, config in enumerate(configs_from_loc):
