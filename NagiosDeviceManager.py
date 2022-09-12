@@ -2,6 +2,7 @@ import os
 import func
 import menus
 import config
+import re
 
 func.catch_c()
 func.server_connect()
@@ -47,21 +48,38 @@ while (True):
                     match option:
                         # New Config from base configuration
                         case 1:
-                            try:
-                                func.server_connect(fr"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
-                                func.server_connect(fr"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
-                                func.server_connect(fr"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
+                            new_config = f'{hostname}.cfg'
+                            func.create_base_config(device_to_create)
+                            func.get_file_from_server(f"{device_to_create['path']}/{device_to_create['basetype']}-base.cfg", new_config)
 
-                                print(
-                                    '------------------------------------------------------\n'
-                                    f"New configuration made with name {hostname}.cfg in {device_to_create['path']}.\n"
-                                    "Please make any additional changes inside the file.\n"
-                                    '------------------------------------------------------\n'
-                                )
-                            except Exception:
-                                print(
-                                    "An error has occurred and a new configuration could not be saved."
-                                )
+                            with open(new_config, 'r') as file:
+                                lines = file.read()
+                            
+                            lines = lines.split('}')
+
+                            for line in lines:
+                                if(re.search("^\s*hostname\s*.*$", line)):
+                                    line.replace('base', hostname)
+                                if(re.search("^\s*address\s*.*$", line)):
+                                    line.replace('0.0.0.0', host_address)
+                                if(re.search("^\s*register\s*.*$", line)):
+                                    line.replace('0', '1')
+
+                            #try:
+                            #    func.server_connect(fr"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
+                            #    func.server_connect(fr"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
+                            #    func.server_connect(fr"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
+
+                            #    print(
+                            #        '------------------------------------------------------\n'
+                            #        f"New configuration made with name {hostname}.cfg in {device_to_create['path']}.\n"
+                            #        "Please make any additional changes inside the file.\n"
+                            #        '------------------------------------------------------\n'
+                            #    )
+                            #except Exception:
+                            #    print(
+                            #        "An error has occurred and a new configuration could not be saved."
+                            #    )
 
                         # New custom config from available options
                         case 2:
