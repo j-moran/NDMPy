@@ -54,33 +54,50 @@ while (True):
 
                             with open(new_config, 'r') as file:
                                 lines = file.read()
+
+                            lines = lines.split('}\n')
+
+                            for i,line in enumerate(lines):
+                                if (line == ''):
+                                    lines.remove(lines[i])
+                                else:
+                                    lines[i] += '}\n'
+
+                            for i,line in enumerate(lines):
+                                if ('define host' in line):
+                                    host_chunk = lines[i]
+
+                                    host_chunk = host_chunk.split('\n')
+
+                                    for j,chunk in enumerate(host_chunk):
+                                        if(re.search("^\\s*host_name\\s*.*$", chunk)):
+                                            host_chunk[j] = chunk.replace('base', hostname)
+                                        if(re.search("^\\s*address\\s*.*$", chunk)):
+                                            host_chunk[j] = chunk.replace('0.0.0.0', host_address)
+                                        if(re.search("^\\s*register\\s*.*$", chunk)):
+                                            host_chunk[j] = chunk.replace('0', '1')
+                                        
+                                        host_chunk[j] += '\n'
+
+                                    host_chunk = "".join(host_chunk)
+                                    lines[i] = host_chunk
+
+                            lines = "".join(lines)
+
+                            with open(new_config, 'w') as file:
+                                file.write(lines)
+                                    
+                            func.send_file_to_server(new_config, f"{device_to_create['path']}/{new_config}")
+                            os.remove(new_config)
+                            func.restart_nagios()
+
+                            print(
+                                '------------------------------------------------------\n'
+                                f"New configuration made with name {hostname}.cfg in {device_to_create['path']}.\n"
+                                "Please make any additional changes inside the file or using the 'Modify Configurations' option in the main menu.\n"
+                                '------------------------------------------------------\n'
+                            )
                             
-                            lines = lines.split('}')
-
-                            for line in lines:
-                                if(re.search("^\s*hostname\s*.*$", line)):
-                                    line.replace('base', hostname)
-                                if(re.search("^\s*address\s*.*$", line)):
-                                    line.replace('0.0.0.0', host_address)
-                                if(re.search("^\s*register\s*.*$", line)):
-                                    line.replace('0', '1')
-
-                            #try:
-                            #    func.server_connect(fr"cp {device_to_create['path']}/{device_to_create['basetype']}-base {device_to_create['path']}/{hostname}.cfg")
-                            #    func.server_connect(fr"sed -i -e 's/\<base\>/{hostname}/g' {device_to_create['path']}/{hostname}.cfg")
-                            #    func.server_connect(fr"sed -i -e 's/0.0.0.0/{host_address}/g' {device_to_create['path']}/{hostname}.cfg")
-
-                            #    print(
-                            #        '------------------------------------------------------\n'
-                            #        f"New configuration made with name {hostname}.cfg in {device_to_create['path']}.\n"
-                            #        "Please make any additional changes inside the file.\n"
-                            #        '------------------------------------------------------\n'
-                            #    )
-                            #except Exception:
-                            #    print(
-                            #        "An error has occurred and a new configuration could not be saved."
-                            #    )
-
                         # New custom config from available options
                         case 2:
                             filename = f'{hostname}.cfg'

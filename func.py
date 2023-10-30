@@ -148,7 +148,7 @@ def create_base_config(device_type):
 
 			skeleton = [
 				"define host {\n",
-				"hostname base\n",
+				"host_name base\n",
 				"address 0.0.0.0\n",
 				f"use base_{device_type['basetype']}\n",
 				"register 0\n",
